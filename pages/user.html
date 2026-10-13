@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<link rel="stylesheet"
+href="../css/styles.css">
+</head>
+
+<body>
+
+<h1>User Dashboard</h1>
+
+<h2 id="username"></h2>
+
+<script>
+
+const user =
+localStorage.getItem(
+"currentUser"
+);
+
+document.getElementById(
+"username"
+).innerText =
+"Welcome " + user;
+
+</script>
+
+</body>
+</html>
