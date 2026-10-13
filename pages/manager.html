@@ -1,18 +1,485 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
-<link rel="stylesheet"
-href="../css/styles.css">
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Manager Dashboard</title>
+
+<link rel="stylesheet" href="../css/styles.css">
+
+<style>
+
+body{
+background:#020f2c;
+color:white;
+font-family:'Segoe UI',sans-serif;
+padding:30px;
+}
+
+.header{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:30px;
+}
+
+.card-grid{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+gap:20px;
+margin-bottom:30px;
+}
+
+.card{
+background:#0d1b3d;
+padding:20px;
+border-radius:15px;
+}
+
+.card-title{
+font-size:14px;
+color:#94A3B8;
+margin-bottom:10px;
+}
+
+.card-value{
+font-size:32px;
+font-weight:bold;
+}
+
+.user-list{
+display:grid;
+gap:20px;
+}
+
+.user-card{
+background:#0d1b3d;
+padding:20px;
+border-radius:15px;
+}
+
+.user-header{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:15px;
+}
+
+.status{
+padding:6px 12px;
+border-radius:20px;
+font-size:14px;
+}
+
+.available{
+background:#107C10;
+}
+
+.break{
+background:#FFB900;
+color:black;
+}
+
+.actions{
+margin-top:15px;
+}
+
+button{
+padding:10px 15px;
+border:none;
+border-radius:8px;
+cursor:pointer;
+margin-right:10px;
+}
+
+.view-btn{
+background:#0078D4;
+color:white;
+}
+
+.edit-btn{
+background:#6D28D9;
+color:white;
+}
+
+.logout-btn{
+background:#D13438;
+color:white;
+}
+
+.modal{
+display:none;
+position:fixed;
+inset:0;
+background:rgba(0,0,0,.7);
+justify-content:center;
+align-items:center;
+}
+
+.modal-box{
+background:#111827;
+padding:25px;
+border-radius:15px;
+width:500px;
+}
+
+.input-group{
+margin-bottom:15px;
+}
+
+input{
+width:100%;
+padding:10px;
+border:none;
+border-radius:8px;
+}
+
+.save-btn{
+background:#107C10;
+color:white;
+}
+
+</style>
+
 </head>
 
 <body>
 
-<h1>Manager Dashboard</h1>
+<div class="header">
 
-<h2>
-Welcome Admin
-</h2>
+<div>
+<h1>Manager Dashboard</h1>
+<h3>Welcome Admin</h3>
+</div>
+
+<button
+class="logout-btn"
+onclick="logout()">
+Logout
+</button>
+
+</div>
+
+<div class="card-grid">
+
+<div class="card">
+<div class="card-title">Total Users</div>
+<div class="card-value" id="totalUsers">
+0
+</div>
+</div>
+
+<div class="card">
+<div class="card-title">Available</div>
+<div class="card-value" id="availableUsers">
+0
+</div>
+</div>
+
+<div class="card">
+<div class="card-title">On Break</div>
+<div class="card-value" id="breakUsers">
+0
+</div>
+</div>
+
+</div>
+
+<div
+class="user-list"
+id="userList">
+</div>
+
+<div
+class="modal"
+id="editModal">
+
+<div class="modal-box">
+
+<h2>Edit User Breaks</h2>
+
+<div class="input-group">
+<label>Break 1 (seconds)</label>
+<input id="break1Input">
+</div>
+
+<div class="input-group">
+<label>Break 2 (seconds)</label>
+<input id="break2Input">
+</div>
+
+<div class="input-group">
+<label>Lunch (seconds)</label>
+<input id="lunchInput">
+</div>
+
+<button
+class="save-btn"
+onclick="saveUser()">
+Save
+</button>
+
+</div>
+
+</div>
+
+<script>
+
+const USERS=[
+"user1",
+"user2",
+"user3"
+];
+
+let selectedUser=null;
+
+function logout(){
+
+localStorage.removeItem(
+"currentUser"
+);
+
+window.location.href=
+"../index.html";
+
+}
+
+function format(sec){
+
+const mins=
+Math.floor(sec/60);
+
+const secs=
+sec%60;
+
+return mins + ":" +
+String(secs).padStart(2,"0");
+
+}
+
+function loadUsers(){
+
+let available=0;
+let onBreak=0;
+
+const container=
+document.getElementById(
+"userList"
+);
+
+container.innerHTML="";
+
+USERS.forEach(user=>{
+
+let data=
+JSON.parse(
+localStorage.getItem(
+"userData_"+user
+)
+);
+
+if(!data){
+
+data={
+break1:900,
+break2:900,
+lunch:1800,
+history:[]
+};
+
+localStorage.setItem(
+"userData_"+user,
+JSON.stringify(data)
+);
+
+}
+
+const status=
+"Available";
+
+available++;
+
+container.innerHTML += `
+<div class="user-card">
+
+<div class="user-header">
+
+<h2>${user}</h2>
+
+<span class="status available">
+${status}
+</span>
+
+</div>
+
+<p>Break 1:
+${format(data.break1)}</p>
+
+<p>Break 2:
+${format(data.break2)}</p>
+
+<p>Lunch:
+${format(data.lunch)}</p>
+
+<div class="actions">
+
+<button
+class="view-btn"
+onclick="viewUser('${user}')">
+View History
+</button>
+
+<button
+class="edit-btn"
+onclick="editUser('${user}')">
+Edit Breaks
+</button>
+
+</div>
+
+</div>
+`;
+
+});
+
+document.getElementById(
+"totalUsers"
+).innerText=
+USERS.length;
+
+document.getElementById(
+"availableUsers"
+).innerText=
+available;
+
+document.getElementById(
+"breakUsers"
+).innerText=
+onBreak;
+
+}
+
+function viewUser(user){
+
+const data=
+JSON.parse(
+localStorage.getItem(
+"userData_"+user
+)
+);
+
+let text=
+`${user}\n\n`;
+
+if(data.history.length===0){
+
+text += "No history";
+
+}
+else{
+
+data.history.forEach(item=>{
+
+text +=
+`${item.type}
+ ${item.used}
+ ${item.time}\n`;
+
+});
+
+}
+
+alert(text);
+
+}
+
+function editUser(user){
+
+selectedUser=user;
+
+const data=
+JSON.parse(
+localStorage.getItem(
+"userData_"+user
+)
+);
+
+document.getElementById(
+"break1Input"
+).value=
+data.break1;
+
+document.getElementById(
+"break2Input"
+).value=
+data.break2;
+
+document.getElementById(
+"lunchInput"
+).value=
+data.lunch;
+
+document.getElementById(
+"editModal"
+).style.display=
+"flex";
+
+}
+
+function saveUser(){
+
+let data=
+JSON.parse(
+localStorage.getItem(
+"userData_"+selectedUser
+)
+);
+
+data.break1=
+parseInt(
+document.getElementById(
+"break1Input"
+).value
+);
+
+data.break2=
+parseInt(
+document.getElementById(
+"break2Input"
+).value
+);
+
+data.lunch=
+parseInt(
+document.getElementById(
+"lunchInput"
+).value
+);
+
+localStorage.setItem(
+"userData_"+selectedUser,
+JSON.stringify(data)
+);
+
+document.getElementById(
+"editModal"
+).style.display=
+"none";
+
+loadUsers();
+
+}
+
+loadUsers();
+
+setInterval(
+loadUsers,
+5000
+);
+
+</script>
 
 </body>
 </html>
